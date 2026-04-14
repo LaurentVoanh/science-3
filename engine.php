@@ -8,15 +8,13 @@
 if (!defined('DE_VERSION')) require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/apis.php';
 
-// Récupérer session_id AVANT les headers
+// Récupérer session_id APRÈS que config.php ait initialisé la session
 $session_id = $_POST['session_id'] ?? ($_SESSION['discovery_session'] ?? null);
 
 // Si pas de session_id, en créer un nouveau
 if (!$session_id) {
     $session_id = bin2hex(random_bytes(16));
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        $_SESSION['discovery_session'] = $session_id;
-    }
+    $_SESSION['discovery_session'] = $session_id;
 }
 
 header('Content-Type: application/json; charset=utf-8');
@@ -26,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-ob_start();
+// Nettoyage de tout buffer précédent avant de démarrer
+while (ob_get_level()) ob_end_clean();
 
 try {
     switch ($action) {
@@ -99,8 +98,10 @@ try {
             throw new Exception("Action inconnue: {$action}");
     }
 } catch (Exception $e) {
-    ob_clean();
+    while (ob_get_level()) ob_end_clean();
+    http_response_code(500);
     echo json_encode(['ok'=>false,'error'=>$e->getMessage()]);
+    exit;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

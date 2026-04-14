@@ -16,7 +16,7 @@
 @ini_set('display_errors', 0);
 @ini_set('log_errors', 1);
 @ini_set('error_log', __DIR__ . '/storage/php_errors.log');
-while(@ob_get_level() > 0) { @ob_end_clean(); }
+// Ne pas nettoyer les buffers ici, cela sera fait dans engine.php si nécessaire
 
 // ============================================================================
 // CONSTANTES GLOBALES
