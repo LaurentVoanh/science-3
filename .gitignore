@@ -1,5 +1,7 @@
 ```
-# Logs and temp files
-*.log
-storage/php_errors.log
+# Database files
+*.sqlite
+
+# State/storage files
+storage/
 ```
