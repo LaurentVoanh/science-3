@@ -22,6 +22,9 @@ while(@ob_get_level() > 0) { @ob_end_clean(); }
 // CONSTANTES GLOBALES
 // ============================================================================
 defined('DISCOVERY_VERSION') or define('DISCOVERY_VERSION', '2.0.0-discovery');
+// Alias pour compatibilité avec engine.php et apis.php
+defined('DE_VERSION') or define('DE_VERSION', DISCOVERY_VERSION);
+defined('ABSTRACT_MAX_CHARS') or define('ABSTRACT_MAX_CHARS', 600);
 defined('STORAGE_PATH')        or define('STORAGE_PATH',       __DIR__ . '/storage/');
 defined('DB_PATH')             or define('DB_PATH',            __DIR__ . '/discovery.sqlite');
 defined('MAX_STEP_TIME')       or define('MAX_STEP_TIME',      25);
@@ -29,6 +32,14 @@ defined('MAX_LOOPS_BEFORE_EVAL') or define('MAX_LOOPS_BEFORE_EVAL', 5);
 defined('MIN_DISCOVERY_SCORE') or define('MIN_DISCOVERY_SCORE', 0.75);
 defined('MAX_QUERIES_PER_LOOP') or define('MAX_QUERIES_PER_LOOP', 50);
 defined('MAX_ERRORS_BEFORE_RESET')  or define('MAX_ERRORS_BEFORE_RESET', 10);
+
+// Création des dossiers de stockage si nécessaires
+if (!is_dir(STORAGE_PATH)) {
+    @mkdir(STORAGE_PATH, 0755, true);
+}
+if (!is_dir(STORAGE_PATH . 'state')) {
+    @mkdir(STORAGE_PATH . 'state', 0755, true);
+}
 
 // ============================================================================
 // CLÉS API MISTRAL — Rotation automatique avec fallback
@@ -806,10 +817,28 @@ function init_database() {
             last_optimized DATETIME DEFAULT CURRENT_TIMESTAMP
         )");
         
+        // Table source_results (résultats des sources pour les découvertes)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS source_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            discovery_id INTEGER NOT NULL,
+            session_id TEXT,
+            source TEXT NOT NULL,
+            query TEXT,
+            hits INTEGER DEFAULT 0,
+            abstracts_text TEXT,
+            title TEXT,
+            abstract TEXT,
+            url TEXT,
+            relevance_score REAL DEFAULT 0.5,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (discovery_id) REFERENCES discoveries(id)
+        )");
+        
         // Index pour performance
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_logs_session ON research_logs(session_id, created_at)");
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_findings_session ON findings(session_id, loop_num)");
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_discoveries_score ON discoveries(discovery_score DESC)");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_source_results_discovery ON source_results(discovery_id)");
         
         return $pdo;
     } catch(Exception $e) {
@@ -824,6 +853,21 @@ function add_to_log($session_id, $loop_num, $step, $phase, $message, $details = 
 
     $stmt = $pdo->prepare("INSERT INTO research_logs (session_id, loop_num, step, phase, message, details, log_type, data_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     return $stmt->execute([$session_id, $loop_num, $step, $phase, $message, $details, $log_type, $data_json ? json_encode($data_json) : null]);
+}
+
+// Alias pour compatibilité avec engine.php qui utilise add_log()
+function add_log($session_id, $iteration, $step, $phase, $message, $details = null, $log_type = 'info') {
+    return add_to_log($session_id, $iteration, $step, $phase, $message, $details, $log_type);
+}
+
+// Fonction pour récupérer les logs d'une session
+function get_logs($session_id, $limit = 50) {
+    $pdo = get_db();
+    if(!$pdo) return [];
+    
+    $stmt = $pdo->prepare("SELECT * FROM research_logs WHERE session_id = ? ORDER BY created_at DESC LIMIT ?");
+    $stmt->execute([$session_id, (int)$limit]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function save_finding($session_id, $loop_num, $source, $query, $title, $abstract = '', $url = '', $relevance = 0.5) {
