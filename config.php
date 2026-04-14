@@ -878,34 +878,6 @@ function save_finding($session_id, $loop_num, $source, $query, $title, $abstract
     return $stmt->execute([$session_id, $loop_num, $source, $query, $title, $abstract, $url, $relevance]);
 }
 
-function save_discovery($data) {
-    $pdo = get_db();
-    if(!$pdo) return false;
-
-    $stmt = $pdo->prepare("INSERT INTO discoveries (title, hypothesis, vulgarized, novelty_score, confidence, discovery_score, mechanism, evidence_strength, keywords, domain, session_id, loops_completed, sources_used, queries_made, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-    $keywords_json = is_array($data['keywords'] ?? null) ? json_encode($data['keywords']) : '[]';
-    $sources_json = is_array($data['sources_used'] ?? null) ? json_encode($data['sources_used']) : '[]';
-    
-    return $stmt->execute([
-        $data['title'] ?? 'Unknown',
-        $data['hypothesis'] ?? '',
-        $data['vulgarized'] ?? '',
-        $data['novelty_score'] ?? 0.5,
-        $data['confidence'] ?? 0.5,
-        $data['discovery_score'] ?? 0.0,
-        $data['mechanism'] ?? '',
-        $data['evidence_strength'] ?? 'moderate',
-        $keywords_json,
-        $data['domain'] ?? 'general',
-        $data['session_id'] ?? session_id(),
-        $data['loops_completed'] ?? 0,
-        $sources_json,
-        $data['queries_made'] ?? 0,
-        $data['status'] ?? 'pending_validation'
-    ]);
-}
-
 // ============================================================================
 // SESSION MANAGEMENT
 // ============================================================================
