@@ -4,9 +4,20 @@
  * Moteur de découverte : boucle itérative, réévaluation, vrais abstracts
  */
 
+// Inclure config.php EN PREMIER pour initialiser les sessions avant tout header
 if (!defined('DE_VERSION')) require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/apis.php';
 
+// Récupérer session_id AVANT les headers
+$session_id = $_POST['session_id'] ?? ($_SESSION['discovery_session'] ?? null);
+
+// Si pas de session_id, en créer un nouveau
+if (!$session_id) {
+    $session_id = bin2hex(random_bytes(16));
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION['discovery_session'] = $session_id;
+    }
+}
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -14,7 +25,6 @@ header('Access-Control-Allow-Origin: *');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
-$session_id = $_POST['session_id'] ?? $SESSION_ID;
 
 ob_start();
 
