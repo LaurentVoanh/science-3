@@ -975,8 +975,8 @@ FORMAT JSON:
     {\"query\": \"<version 5>\", \"rationale\": \"<pourquoi>\"}
   ],
   \"recommended_source_order\": [\"<source 1>\", \"<source 2>\", \"<source 3>\"],
-  \"expected_total_hits\": <estimation du nombre total de resultats>"
-]",
+  \"expected_total_hits\": <estimation du nombre total de resultats>
+}",
 
     'hypothesis_generation' => "Tu es un chercheur de renommée mondiale spécialisé en génération d'hypothèses RÉVOLUTIONNAIRES.
 
