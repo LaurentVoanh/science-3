@@ -1,1 +1,1 @@
-Nothing needs to be added to .gitignore since only PHP source files (config.php, engine.php) were modified and no build artifacts, dependencies, or temporary files were detected in the changes.
+Nothing should be ignored based on the provided file changes. The modified files (config.php, engine.php, index.php) are all source code files that should be tracked in version control.

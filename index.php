@@ -244,10 +244,23 @@ document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('cli
 async function startAuto() {
   const domain = document.getElementById('auto-domain').value;
   closeModal('auto');
-  const r = await fetch('engine.php', {method:'POST', body: new URLSearchParams({action:'start_auto', domain})});
-  const d = await r.json();
-  if (d.ok) window.location.href = `research.php?session=${d.session_id}`;
-  else alert('Erreur: ' + d.error);
+  try {
+    const r = await fetch('engine.php', {
+      method:'POST', 
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({action:'start_auto', domain})
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (d.ok && d.session_id) {
+      window.location.href = `research.php?session=${d.session_id}`;
+    } else {
+      throw new Error(d.error || 'Réponse invalide');
+    }
+  } catch(e) {
+    console.error('Erreur startAuto:', e);
+    alert('Erreur: ' + e.message);
+  }
 }
 
 async function startGuided() {
@@ -255,10 +268,23 @@ async function startGuided() {
   const domain   = document.getElementById('guided-domain').value;
   if (!question) { alert('Entrez une question'); return; }
   closeModal('guided');
-  const r = await fetch('engine.php', {method:'POST', body: new URLSearchParams({action:'start_guided', question, domain})});
-  const d = await r.json();
-  if (d.ok) window.location.href = `research.php?session=${d.session_id}`;
-  else alert('Erreur: ' + d.error);
+  try {
+    const r = await fetch('engine.php', {
+      method:'POST', 
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({action:'start_guided', question, domain})
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (d.ok && d.session_id) {
+      window.location.href = `research.php?session=${d.session_id}`;
+    } else {
+      throw new Error(d.error || 'Réponse invalide');
+    }
+  } catch(e) {
+    console.error('Erreur startGuided:', e);
+    alert('Erreur: ' + e.message);
+  }
 }
 
 // Load stats & recent discoveries
