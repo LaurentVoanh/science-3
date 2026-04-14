@@ -1,1 +1,5 @@
-Nothing should be ignored based on the provided file changes. The modified files (config.php, engine.php, index.php) are all source code files that should be tracked in version control.
+```
+# Logs and temp files
+*.log
+storage/php_errors.log
+```
