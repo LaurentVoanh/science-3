@@ -36,6 +36,7 @@ try {
             $state  = init_state($session_id, 'auto', '', $domain);
             save_state($session_id, $state);
             send(['ok'=>true,'state'=>$state,'session_id'=>$session_id]);
+            break;
 
         // ── DÉMARRER AVEC UNE QUESTION ────────────────────────────────────
         case 'start_guided':
@@ -45,6 +46,7 @@ try {
             $state = init_state($session_id, 'guided', $question, $domain);
             save_state($session_id, $state);
             send(['ok'=>true,'state'=>$state,'session_id'=>$session_id]);
+            break;
 
         // ── EXÉCUTER L'ÉTAPE SUIVANTE ─────────────────────────────────────
         case 'step':
@@ -53,17 +55,20 @@ try {
             $state = execute_step($state);
             save_state($session_id, $state);
             send(['ok'=>true,'state'=>$state,'phase'=>$state['phase'],'step'=>$state['step'],'logs'=>get_logs($session_id, 30)]);
+            break;
 
         // ── RÉCUPÉRER L'ÉTAT ──────────────────────────────────────────────
         case 'get_state':
             $state = load_state($session_id);
             $logs  = get_logs($session_id, 50);
             send(['ok'=>true,'state'=>$state,'logs'=>$logs]);
+            break;
 
         // ── RESET ─────────────────────────────────────────────────────────
         case 'reset':
             delete_state($session_id);
             send(['ok'=>true]);
+            break;
 
         // ── LISTE DES DÉCOUVERTES ─────────────────────────────────────────
         case 'list_discoveries':
@@ -72,6 +77,7 @@ try {
             $stmt  = $pdo->prepare("SELECT * FROM discoveries ORDER BY created_at DESC LIMIT ?");
             $stmt->execute([$limit]);
             send(['ok'=>true,'data'=>$stmt->fetchAll()]);
+            break;
 
         // ── DÉTAIL D'UNE DÉCOUVERTE ───────────────────────────────────────
         case 'get_discovery':
@@ -84,6 +90,7 @@ try {
             $s = $pdo->prepare("SELECT * FROM source_results WHERE discovery_id=?");
             $s->execute([$id]);
             send(['ok'=>true,'data'=>$row,'sources'=>$s->fetchAll()]);
+            break;
 
         // ── STATS ─────────────────────────────────────────────────────────
         case 'stats':
@@ -93,6 +100,7 @@ try {
             $avg_nov = $pdo->query("SELECT AVG(novelty_score) FROM discoveries")->fetchColumn();
             $avg_conf= $pdo->query("SELECT AVG(confidence) FROM discoveries")->fetchColumn();
             send(['ok'=>true,'total'=>(int)$total,'high_novelty'=>(int)$high,'avg_novelty'=>round((float)$avg_nov,2),'avg_confidence'=>round((float)$avg_conf,2)]);
+            break;
 
         default:
             throw new Exception("Action inconnue: {$action}");

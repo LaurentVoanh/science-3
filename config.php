@@ -879,16 +879,20 @@ function save_finding($session_id, $loop_num, $source, $query, $title, $abstract
 // ============================================================================
 // SESSION MANAGEMENT
 // ============================================================================
-if(session_status() === PHP_SESSION_NONE) {
-    @session_start();
+// Note: Session initialisation is now handled by engine.php to prevent output before headers
+if (!function_exists('init_discovery_session')) {
+    function init_discovery_session() {
+        global $SESSION_ID, $db;
+        if(session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if(!isset($_SESSION['discovery_session'])) {
+            $_SESSION['discovery_session'] = bin2hex(random_bytes(16));
+        }
+        $SESSION_ID = $_SESSION['discovery_session'];
+        $db = get_db();
+    }
 }
-if(!isset($_SESSION['discovery_session'])) {
-    $_SESSION['discovery_session'] = bin2hex(random_bytes(16));
-}
-$SESSION_ID = $_SESSION['discovery_session'];
-
-// Initialisation database
-$db = get_db();
 
 // ============================================================================
 // PROMPT LIBRARY — Optimisés pour vraies découvertes
